@@ -2,6 +2,7 @@
 import React from 'react';
 // import { useChatState } from '../contexts/ChatStateContext';
 import MessageList from '../chat/MessageList';
+import MessageInput from '../chat/MessageInput';
 
 const ChatBox = () => {
 
@@ -10,6 +11,7 @@ const ChatBox = () => {
 
     <div>
       <MessageList />
+      <MessageInput />
     </div>
   );
 };
