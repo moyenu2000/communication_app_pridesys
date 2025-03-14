@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
+import { AppStateProvider } from '../contexts/AppStateContext';
+import { ChatStateProvider } from '../contexts/ChatStateContext';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
 
@@ -17,11 +19,15 @@ import DirectMessages from '../pages/DirectMessages';
 import UserProfile from '../pages/UserProfile';
 import Settings from '../pages/Settings';
 import NotFound from '../pages/NotFound';
+import { WebSocketProvider } from '../contexts/WebSocketContext';
 
 function Router() {
   return (
     <BrowserRouter>
       <AuthProvider>
+      <AppStateProvider>
+        <ChatStateProvider>
+        <WebSocketProvider>
         <Routes>
           {/* Public Routes */}
           <Route element={<PublicRoute />}>
@@ -48,6 +54,9 @@ function Router() {
           {/* Catch-all Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </WebSocketProvider>
+        </ChatStateProvider>
+      </AppStateProvider>
       </AuthProvider>
     </BrowserRouter>
   );
