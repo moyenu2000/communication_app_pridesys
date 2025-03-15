@@ -72,6 +72,7 @@ export const extractFileIds = (content) => {
    * @param {string} content - The message content
    * @returns {Array} Array of parts (text and mentions)
    */
+
   export const processMessageContent = (content) => {
     if (!content) return null;
     
@@ -119,4 +120,10 @@ export const extractFileIds = (content) => {
     }
     
     return parts.length > 0 ? parts : [{ type: 'text', content: content }];
+  };
+
+
+  // remove the mention part formatting and return normal text
+  export const removeMentionFormatting = (content) => {
+    return content.replace(/!{"type":"user","raw":"@([^"]+)","id":"[^"]+"}/g, '@$1');
   };

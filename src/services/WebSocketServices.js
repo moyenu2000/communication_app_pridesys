@@ -37,7 +37,7 @@ class WebSocketService {
   }
 
 
-  async handleMessage(data, setMessages, selectedChat, setTypingUsers, setChannels, setUsers) {
+  async handleMessage(data, setMessages, selectedChat, setTypingUsers, setChannels, setUsers, setActiveUsers, setCurrentChannelViewers) {
     switch (data.type) {
       case "MESSAGE_CREATED":
         // console.log("New message:", data.body);
@@ -81,6 +81,8 @@ class WebSocketService {
       case "CHANNEL_VIEWERS_CHANGED":
         if (selectedChat && data.body.id === selectedChat.id) {
           // Extract users currently in 'editing' state, excluding the logged-in user
+
+          setCurrentChannelViewers(data.body.viewers);
           const editingUsers = data.body.viewers
             .filter(viewer => viewer.state === 'editing')  // Make sure logged-in user is excluded
             .map(viewer => viewer.userId);
@@ -93,6 +95,7 @@ class WebSocketService {
                 return response.data;
               })
             );
+
 
             // Update the state with the users' data
             console.log("Editing users:", usersData);
@@ -216,6 +219,38 @@ class WebSocketService {
       });
       console.log(`Message with ID ${data.body.id} was deleted.`);
       break;
+
+
+      // USER_ONLINE
+      case "USER_ONLINE":
+        try {
+          const response = await axios.get(`https://traq.duckdns.org/api/v3/users/${data.body.id}`, {
+            withCredentials: true,
+          });
+          const onlineUser = response.data;
+          
+          setActiveUsers(prevActiveUsers => {
+            // Check if the user is already in the active users list
+            const userExists = prevActiveUsers.some(user => user.id === onlineUser.id);
+            if (!userExists) {
+              console.log(`User ${onlineUser.name} is now online.`);
+              return [...prevActiveUsers, onlineUser];
+            }
+            return prevActiveUsers;
+          });
+        } catch (error) {
+          console.error("Error fetching online user information:", error);
+        }
+        break;
+
+      case "USER_OFFLINE":
+        setActiveUsers(prevActiveUsers => {
+          console.log(`User with ID ${data.body.id} is now offline.`);
+          return prevActiveUsers.filter(user => user.id !== data.body.id);
+        });
+        break;
+      
+
 
 
 

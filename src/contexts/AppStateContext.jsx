@@ -5,7 +5,7 @@ import React, { createContext, useState, useContext } from 'react';
 const AppStateContext = createContext();
 
 export const AppStateProvider = ({ children }) => {
-  const [selectedOption, setSelectedOption] = useState('home'); // default to home
+  const [selectedOption, setSelectedOption] = useState('home');
 
   const selectOption = (option) => {
     setSelectedOption(option); 

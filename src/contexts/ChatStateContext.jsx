@@ -11,6 +11,7 @@ export const ChatStateProvider = ({ children }) => {
   const [offset, setOffset] = useState(0);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [typingUsers, setTypingUsers] = useState([]);
+  const [currentChannelViewers, setCurrentChannelViewers] = useState([]);
 
   const selectChat = async (chat) => {
     setSelectedChat(chat);
@@ -18,6 +19,9 @@ export const ChatStateProvider = ({ children }) => {
     setMessages([]); 
     setTypingUsers([]);
     setPinnedMessages([]); 
+    setHasMoreMessages(true);
+    setLoading(true );
+    setCurrentChannelViewers([]);
     await loadMessages(chat.id, 10, 0, true);
   };
 
@@ -66,7 +70,7 @@ export const ChatStateProvider = ({ children }) => {
   };
 
   return (
-    <ChatStateContext.Provider value={{ selectedChat, selectChat, messages, setMessages, addNewMessage , typingUsers, setTypingUsers }}>
+    <ChatStateContext.Provider value={{ selectedChat, selectChat, messages, setMessages, addNewMessage , typingUsers, setTypingUsers, pinnedMessages, setPinnedMessages, currentChannelViewers, setCurrentChannelViewers }}>
       {children}
     </ChatStateContext.Provider>
   );

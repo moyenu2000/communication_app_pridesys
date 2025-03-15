@@ -20,6 +20,12 @@ export const fetchUsers = () => {
   return axiosInstance.get('/users');
 };
 
+// fetch active user list
+// /activity/onlines
+export const fetchActiveUsers = () => {
+  return axiosInstance.get('/activity/onlines');
+};
+
 // fetch dm channel GET
 // /users/{userId}/dm- channel
 export const fetchDMChannel = (userId) => {

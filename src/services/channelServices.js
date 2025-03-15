@@ -2,6 +2,91 @@ import axios from 'axios';
 
 const API_BASE = 'https://traq.duckdns.org/api/v3';
 
+
+export const createChannelService = async (name, parentId) => {
+  try {
+    const response = await axios.post(`${API_BASE}/channels`, {
+      name: name,
+      parent: parentId || null
+    }, {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating channel:', error);
+    throw new Error('Error creating channel');
+  }
+};
+
+
+export const getStarredChannels = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/users/me/stars`, {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching starred channels:', error);
+    throw error;
+  }
+};
+
+// /subscriptions
+export const getSubscribedChannels = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/users/me/subscriptions`, {
+      withCredentials: true
+    });
+    return response.data;
+  }
+  catch (error) {
+    console.error('Error fetching subscribed channels:', error);
+    throw error;
+  }
+};
+
+
+export const addChannelToStars = async (channelId) => {
+  try {
+    await axios.post(`${API_BASE}/users/me/stars`, { channelId }, {
+      withCredentials: true
+    });
+    return true;
+  } catch (error) {
+    console.error('Error adding channel to stars:', error);
+    throw error;
+  }
+};
+
+
+export const removeChannelFromStars = async (channelId) => {
+  try {
+    await axios.delete(`${API_BASE}/users/me/stars/${channelId}`, {
+      withCredentials: true
+    });
+    return true;
+  } catch (error) {
+    console.error('Error removing channel from stars:', error);
+    throw error;
+  }
+};
+
+export const setChannelSubscriptionLevel = async (channelId, level) => {
+  try {
+    await axios.put(`${API_BASE}/users/me/subscriptions/${channelId}`, {
+      level: level
+    }, {
+      withCredentials: true
+    });
+    return true;
+  } catch (error) {
+    console.error('Error setting channel subscription level:', error);
+    throw error;
+  }
+};
+
+
+
 export const fetchMessages = async (channelId, limit = 10, offset = 0) => {
   try {
     const response = await axios.get(`${API_BASE}/channels/${channelId}/messages`, {
@@ -126,5 +211,19 @@ export const deleteMessage = async (messageId) => {
       }
     }
     throw new Error('Error deleting message');
+  }
+};
+
+export const updateMessage = async (messageId, content) => {
+  try {
+    const response = await axios.put(`${API_BASE}/messages/${messageId}`, {
+      content: content
+    }, {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating message:', error);
+    throw new Error('Error updating message');
   }
 };
