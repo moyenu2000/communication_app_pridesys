@@ -18,7 +18,6 @@ export const AppStateProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use AppStateContext
 export const useAppState = () => {
   return useContext(AppStateContext);
 };

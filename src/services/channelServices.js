@@ -104,3 +104,27 @@ export const fetchOGPData = async (url) => {
     throw new Error('Error fetching OGP data');
   }
 };
+
+
+
+
+export const deleteMessage = async (messageId) => {
+  try {
+    const response = await axios.delete(`${API_BASE}/messages/${messageId}`, {
+      withCredentials: true
+    });
+    
+  
+    return response.status === 204;
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    if (error.response) {
+      if (error.response.status === 403) {
+        throw new Error('You do not have permission to delete this message');
+      } else if (error.response.status === 404) {
+        throw new Error('Message not found');
+      }
+    }
+    throw new Error('Error deleting message');
+  }
+};

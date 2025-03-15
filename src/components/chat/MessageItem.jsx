@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getFileDownloadUrl, fetchFileMetadata, fetchOGPData } from "../../services/channelServices";
+import { getFileDownloadUrl, fetchFileMetadata, fetchOGPData, deleteMessage } from "../../services/channelServices";
 import { useInformation } from "../../contexts/InformationContext";
 import OgpPreview from "./OgpPreview";
 import {
@@ -11,7 +11,8 @@ import {
   processMessageContent
 } from "../../utils/util";
 
-const MessageItem = ({ message }) => {
+
+const MessageItem = ({ message, canEdit, canDelete }) => {
   const { users } = useInformation();
   const [fileMetadata, setFileMetadata] = useState([]);
   const [cleanContent, setCleanContent] = useState("");
@@ -25,10 +26,10 @@ const MessageItem = ({ message }) => {
   const fetchOgpDataForUrl = async (url) => {
     setIsLoadingOgp(true);
     setOgpError(null);
-    
+
     try {
       const response = await fetchOGPData(url);
-      
+
       // Only set OGP data if it's not empty
       if (response && response.type !== "empty") {
         setOgpData(response);
@@ -49,16 +50,16 @@ const MessageItem = ({ message }) => {
     const fetchMeta = async (fileIds) => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
-        const metadataPromises = fileIds.map(fileId => 
+        const metadataPromises = fileIds.map(fileId =>
           fetchFileMetadata(fileId)
             .catch(error => {
               console.error(`Error fetching metadata for file ${fileId}:`, error);
               return null;
             })
         );
-        
+
         const results = await Promise.all(metadataPromises);
         setFileMetadata(results.filter(meta => meta !== null));
         console.log("Fetched file metadata:", results);
@@ -74,7 +75,7 @@ const MessageItem = ({ message }) => {
       const fileIds = extractFileIds(message.content);
       const cleaned = cleanMessageContent(message.content);
       setCleanContent(cleaned);
-      
+
       // Check for URLs in the message
       const url = extractUrl(cleaned);
       if (url) {
@@ -82,7 +83,7 @@ const MessageItem = ({ message }) => {
       } else {
         setOgpData(null);
       }
-      
+
       if (fileIds.length > 0) {
         fetchMeta(fileIds);
       } else {
@@ -105,7 +106,7 @@ const MessageItem = ({ message }) => {
   const renderMessageContent = () => {
     const parts = processMessageContent(cleanContent);
     if (!parts) return null;
-    
+
     return (
       <p className="text-base mb-2">
         {parts.map((part, index) => {
@@ -115,10 +116,10 @@ const MessageItem = ({ message }) => {
             const mentionData = part.content;
             // Find user for additional details if needed
             const user = users.find(u => u.id === mentionData.id);
-            
+
             return (
-              <span 
-                key={index} 
+              <span
+                key={index}
                 className="text-blue-600 font-medium cursor-pointer hover:underline"
                 title={user?.name || mentionData.raw.substring(1)}
               >
@@ -132,10 +133,22 @@ const MessageItem = ({ message }) => {
     );
   };
 
+  const handleDelete = async (messageId) => {
+    if (window.confirm("Are you sure you want to delete this message?")) {
+      try {
+        await deleteMessage(messageId);
+        console.log("Message deleted successfully");
+      } catch (error) {
+        console.error("Failed to delete message:", error);
+      }
+    }
+  };
+
+
   return (
     <div className="p-2 border-b border-gray-300">
       <p className="text-sm text-gray-600">{message?.senderName || 'Unknown'}</p>
-      
+
       {/* Display message content with formatted mentions */}
       {renderMessageContent()}
 
@@ -178,14 +191,25 @@ const MessageItem = ({ message }) => {
           </div>
         </div>
       )}
-      
+
+      {/* delete the message */}
+      {canDelete && (
+        <button className="text-xs text-red-500 hover:underline mt-1" onClick={() => handleDelete(message.id)}>
+          Delete
+        </button>
+      )}
+
+      {/* edit the message */}
+
       {isLoading && <div className="text-sm text-gray-400">Loading attachments...</div>}
-      
+
       {error && <div className="text-sm text-red-500">{error}</div>}
-      
+
       <span className="text-xs text-gray-400 block mt-1">
         {message?.timestamp ? new Date(message.timestamp).toLocaleTimeString() : ''}
       </span>
+
+      {/*  */}
     </div>
   );
 };
