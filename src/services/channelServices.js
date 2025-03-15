@@ -10,7 +10,7 @@ export const fetchMessages = async (channelId, limit = 10, offset = 0) => {
         offset: offset,
         order: 'desc',
       },
-      withCredentials: true, // Ensures cookies/session tokens are included
+      withCredentials: true,
     });
     return response.data;
   } catch (error) {

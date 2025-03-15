@@ -92,6 +92,9 @@ const MessageInput = () => {
     const resetForm = () => {
         setInputValue("");
         setFiles([]);
+        setShowMentionSuggestions(false);
+        setMentionQuery("");
+        setFilteredUsers([]);
         const fileInput = document.querySelector('input[type="file"]');
         if (fileInput) {
             fileInput.value = "";
