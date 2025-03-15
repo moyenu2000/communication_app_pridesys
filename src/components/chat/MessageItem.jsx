@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { getFileDownloadUrl, fetchFileMetadata, fetchOGPData } from "../../services/channelServices";
+import { useInformation } from "../../contexts/InformationContext";
+import OgpPreview from "./OgpPreview";
+import {
+  extractFileIds,
+  extractUrl,
+  cleanMessageContent,
+  getFileIcon,
+  formatFileSize,
+  processMessageContent
+} from "../../utils/util";
 
 const MessageItem = ({ message }) => {
+  const { users } = useInformation();
   const [fileMetadata, setFileMetadata] = useState([]);
   const [cleanContent, setCleanContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -11,29 +21,8 @@ const MessageItem = ({ message }) => {
   const [isLoadingOgp, setIsLoadingOgp] = useState(false);
   const [ogpError, setOgpError] = useState(null);
 
-  // Function to extract file IDs from message content
-  const extractFileIds = (content) => {
-    const match = content?.match(/\[file:(.*?)\]/);
-    if (match && match[1]) {
-      return match[1].split(',');
-    }
-    return [];
-  };
-
-  // Function to extract URLs from message content
-  const extractUrl = (content) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const match = content?.match(urlRegex);
-    return match ? match[0] : null; // Return the first URL found
-  };
-
-  // Function to clean message content of file references
-  const cleanMessageContent = (content) => {
-    return content?.replace(/\s*\[file:.*?\]\s*/, '').trim() || '';
-  };
-
   // Fetch OGP data for URLs
-  const fetchOgpData = async (url) => {
+  const fetchOgpDataForUrl = async (url) => {
     setIsLoadingOgp(true);
     setOgpError(null);
     
@@ -89,7 +78,7 @@ const MessageItem = ({ message }) => {
       // Check for URLs in the message
       const url = extractUrl(cleaned);
       if (url) {
-        fetchOgpData(url);
+        fetchOgpDataForUrl(url);
       } else {
         setOgpData(null);
       }
@@ -112,63 +101,34 @@ const MessageItem = ({ message }) => {
     }
   };
 
-  // Function to get file icon based on MIME type with safe handling
-  const getFileIcon = (mime) => {
-    if (!mime) return '📎'; // Default icon if mime is undefined
-    
-    if (mime.startsWith('image/')) return '📷';
-    if (mime.startsWith('video/')) return '🎬';
-    if (mime.startsWith('audio/')) return '🎵';
-    if (mime.startsWith('text/')) return '📄';
-    if (mime.includes('pdf')) return '📑';
-    if (mime.includes('zip') || mime.includes('rar') || mime.includes('tar')) return '📦';
-    return '📎';
-  };
-
-  // Function to format file size with safe handling
-  const formatFileSize = (bytes) => {
-    if (bytes === undefined || bytes === null) return 'Unknown size';
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // OGP Preview Component
-  const OgpPreview = ({ data }) => {
-    if (!data) return null;
+  // Render content parts with mentions
+  const renderMessageContent = () => {
+    const parts = processMessageContent(cleanContent);
+    if (!parts) return null;
     
     return (
-      <div className="mt-2 mb-2 border rounded-md overflow-hidden bg-gray-50">
-        <a 
-          href={data.url} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="block hover:bg-gray-100 transition-colors"
-        >
-          {data.images && data.images.length > 0 && data.images[0].url && (
-            <div className="w-full h-40 bg-gray-200 overflow-hidden">
-              <img 
-                src={data.images[0].url} 
-                alt={data.title || "Link preview"} 
-                className="w-full h-full object-cover"
-                onError={(e) => e.target.style.display = 'none'}
-              />
-            </div>
-          )}
-          <div className="p-3">
-            {data.title && (
-              <h3 className="font-medium text-blue-600 truncate">{data.title}</h3>
-            )}
-            {data.description && (
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{data.description}</p>
-            )}
-            <p className="text-xs text-gray-500 mt-2 truncate">{data.url}</p>
-          </div>
-        </a>
-      </div>
+      <p className="text-base mb-2">
+        {parts.map((part, index) => {
+          if (part.type === 'text') {
+            return <span key={index}>{part.content}</span>;
+          } else if (part.type === 'mention') {
+            const mentionData = part.content;
+            // Find user for additional details if needed
+            const user = users.find(u => u.id === mentionData.id);
+            
+            return (
+              <span 
+                key={index} 
+                className="text-blue-600 font-medium cursor-pointer hover:underline"
+                title={user?.name || mentionData.raw.substring(1)}
+              >
+                {mentionData.raw}
+              </span>
+            );
+          }
+          return null;
+        })}
+      </p>
     );
   };
 
@@ -176,10 +136,8 @@ const MessageItem = ({ message }) => {
     <div className="p-2 border-b border-gray-300">
       <p className="text-sm text-gray-600">{message?.senderName || 'Unknown'}</p>
       
-      {/* Display message content */}
-      {cleanContent && (
-        <p className="text-base mb-2">{cleanContent}</p>
-      )}
+      {/* Display message content with formatted mentions */}
+      {renderMessageContent()}
 
       {/* Display OGP preview if available */}
       {isLoadingOgp && (
@@ -221,13 +179,10 @@ const MessageItem = ({ message }) => {
         </div>
       )}
       
-      {/* Display loading indicator */}
       {isLoading && <div className="text-sm text-gray-400">Loading attachments...</div>}
       
-      {/* Display error message if any */}
       {error && <div className="text-sm text-red-500">{error}</div>}
       
-      {/* Message timestamp */}
       <span className="text-xs text-gray-400 block mt-1">
         {message?.timestamp ? new Date(message.timestamp).toLocaleTimeString() : ''}
       </span>
