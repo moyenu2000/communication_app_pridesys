@@ -1,4 +1,5 @@
 import axios from "axios";
+import { fetchUser } from "./userServices";
 
 class WebSocketService {
   constructor() {
@@ -23,7 +24,7 @@ class WebSocketService {
       this.retryCount = 0;
     };
 
-  
+
 
     this.socket.onclose = () => {
       console.log("WebSocket disconnected.");
@@ -36,47 +37,196 @@ class WebSocketService {
   }
 
 
-  async handleMessage(data, setMessages, selectedChat) {
+  async handleMessage(data, setMessages, selectedChat, setTypingUsers, setChannels, setUsers) {
     switch (data.type) {
       case "MESSAGE_CREATED":
-        console.log("New message:", data.body);
-        console.log("Selected chat:", selectedChat);
+        // console.log("New message:", data.body);
+        // console.log("Selected chat:", selectedChat);
 
         if (!selectedChat) {
           console.log("No chat selected. Ignoring message.");
           return;
         }
-  
+
         try {
           const response = await axios.get(`https://traq.duckdns.org/api/v3/messages/${data.body.id}`, {
             withCredentials: true,
           });
-  
+
           const fullMessage = response.data;
-          console.log("Full message:", fullMessage);
-          console.log("Selected chat ID:", selectedChat.id);
-  
+          // console.log("Full message:", fullMessage);
+          // console.log("Selected chat ID:", selectedChat.id);
+
           if (fullMessage.channelId !== selectedChat.id) {
-            console.log("Message does not belong to selected chat. Ignoring...");
+            // console.log("Message does not belong to selected chat. Ignoring...");
             return;
           }
-  
+
           // Update the messages state with the new message
           setMessages(prevMessages => {
-            console.log("Updating messages with new message");
-            return [fullMessage, ...prevMessages ];
+            // console.log("Updating messages with new message");
+            return [fullMessage, ...prevMessages];
           });
           // console.log
-          
-          console.log("Messages updated");
+
+          // console.log("Messages updated");/
         } catch (error) {
           console.error("Error fetching full message:", error);
         }
         break;
 
-       
-        
-      
+
+
+
+      case "CHANNEL_VIEWERS_CHANGED":
+        if (selectedChat && data.body.id === selectedChat.id) {
+          // Extract users currently in 'editing' state, excluding the logged-in user
+          const editingUsers = data.body.viewers
+            .filter(viewer => viewer.state === 'editing')  // Make sure logged-in user is excluded
+            .map(viewer => viewer.userId);
+
+          try {
+            // Use Promise.all to fetch all user information concurrently
+            const usersData = await Promise.all(
+              editingUsers.map(async (userId) => {
+                const response = await fetchUser(userId); // Assuming fetchUser returns user data
+                return response.data;
+              })
+            );
+
+            // Update the state with the users' data
+            console.log("Editing users:", usersData);
+            setTypingUsers(usersData);
+          } catch (error) {
+            console.error("Error fetching users' information:", error);
+          }
+        }
+        break;
+
+      case "CHANNEL_CREATED":
+        try {
+          const response = await axios.get(`https://traq.duckdns.org/api/v3/channels/${data.body.id}`, {
+            withCredentials: true,
+          });
+
+          const newChannel = response.data;
+
+          setChannels(prevChannels => [newChannel, ...prevChannels]);
+          console.log("New channel created:", newChannel);
+        } catch (error) {
+          console.error("Error fetching new channel information:", error);
+        }
+        break;
+
+        // USER_JOINED
+      case "USER_JOINED":
+        try {
+          const response = await axios.get(`https://traq.duckdns.org/api/v3/users/${data.body.id}`, {
+            withCredentials: true,
+          });
+
+          const newUser = response.data;
+
+          setUsers(prevUsers => [newUser, ...prevUsers]);
+          console.log("New user joined:", newUser);
+        } catch (error) {
+          console.error("Error fetching new user information:", error);
+        }
+        break;
+
+
+        // MESSAGE_STAMPED
+        // MESSAGE_UPDATED
+        // MESSAGE_DELETED
+
+       // MESSAGE_STAMPED
+    case "MESSAGE_STAMPED":
+      if (!selectedChat) {
+        console.log("No chat selected. Ignoring message.");
+        return;
+      }
+
+      try {
+        const response = await axios.get(`https://traq.duckdns.org/api/v3/messages/${data.body.id}`, {
+          withCredentials: true,
+        });
+
+        const fullMessage = response.data;
+
+        if (fullMessage.channelId !== selectedChat.id) {
+          return;
+        }
+
+        // Update the message stamps
+        setMessages(prevMessages => {
+          return prevMessages.map(message => {
+            if (message.id === fullMessage.id) {
+              message.stamps = fullMessage.stamps; // Update the stamps
+            }
+            return message;
+          });
+        });
+      } catch (error) {
+        console.error("Error fetching full message:", error);
+      }
+      break;
+
+    // MESSAGE_UPDATED
+    case "MESSAGE_UPDATED":
+      if (!selectedChat) {
+        console.log("No chat selected. Ignoring message.");
+        return;
+      }
+
+      try {
+        const response = await axios.get(`https://traq.duckdns.org/api/v3/messages/${data.body.id}`, {
+          withCredentials: true,
+        });
+
+        const fullMessage = response.data;
+
+        if (fullMessage.channelId !== selectedChat.id) {
+          return;
+        }
+
+        // Update the message content
+        setMessages(prevMessages => {
+          return prevMessages.map(message => {
+            if (message.id === fullMessage.id) {
+              return fullMessage; // Replace the old message with the updated one
+            }
+            return message;
+          });
+        });
+      } catch (error) {
+        console.error("Error fetching full message:", error);
+      }
+      break;
+
+    // MESSAGE_DELETED
+    case "MESSAGE_DELETED":
+      if (!selectedChat) {
+        console.log("No chat selected. Ignoring message.");
+        return;
+      }
+
+      // Remove the deleted message from the message list
+      setMessages(prevMessages => {
+        return prevMessages.filter(message => message.id !== data.body.id); // Remove message by ID
+      });
+      console.log(`Message with ID ${data.body.id} was deleted.`);
+      break;
+
+
+
+
+
+      default:
+        console.log("Unhandled data type:", data.type);
+        break;
+
+
+
     }
   }
 

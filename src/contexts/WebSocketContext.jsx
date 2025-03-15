@@ -1,51 +1,9 @@
-// import React, { createContext, useContext, useState, useEffect } from 'react';
-// import WebSocketService from '../services/WebSocketServices';
-// import { useChatState } from './ChatStateContext'; // Import the custom hook
-
-// const WebSocketContext = createContext();
-
-// export const useWebSocket = () => {
-//   return useContext(WebSocketContext);
-// };
-
-// export const WebSocketProvider = ({ children }) => {
-//   const { setMessages, selectedChat } = useChatState();
-//   const [connected, setConnected] = useState(false);
-
-
-
-//   useEffect(() => {
-//     WebSocketService.connect();
-  
-//     WebSocketService.socket.onopen = () => setConnected(true);
-//     WebSocketService.socket.onclose = () => setConnected(false);
-  
-//     WebSocketService.socket.onmessage = (event) => {
-//       const data = JSON.parse(event.data);
-//       console.log(selectedChat);
-//       WebSocketService.handleMessage(data, setMessages, selectedChat);
-//     };
-  
-//     return () => {
-//       WebSocketService.close();
-//     };
-//   }, [selectedChat, setMessages]);
-
-//   const changeViewStat = (channelId, viewState) => {
-//     WebSocketService.send(`viewstate:${channelId}:${viewState}`);
-//   };
-
-//   return (
-//     <WebSocketContext.Provider value={{ changeViewStat, connected }}>
-//       {children}
-//     </WebSocketContext.Provider>
-//   );
-// };
 
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import WebSocketService from '../services/WebSocketServices';
 import { useChatState } from './ChatStateContext';
+import { useInformation } from './InformationContext';
 
 const WebSocketContext = createContext();
 
@@ -54,7 +12,8 @@ export const useWebSocket = () => {
 };
 
 export const WebSocketProvider = ({ children }) => {
-  const { setMessages, selectedChat } = useChatState();
+  const { setMessages, selectedChat , setTypingUsers } = useChatState();
+  const {setChannels, setUsers}=useInformation();
   const [connected, setConnected] = useState(false);
   
   // Set up the connection once
@@ -79,7 +38,7 @@ export const WebSocketProvider = ({ children }) => {
       console.log("Message received:", data);
       console.log(selectedChat);
       
-      WebSocketService.handleMessage(data, setMessages, selectedChat);
+      WebSocketService.handleMessage(data, setMessages, selectedChat, setTypingUsers, setChannels, setUsers);
     };
     
     WebSocketService.socket.addEventListener('message', messageHandler);
@@ -87,7 +46,7 @@ export const WebSocketProvider = ({ children }) => {
     return () => {
       WebSocketService.socket.removeEventListener('message', messageHandler);
     };
-  }, [selectedChat, setMessages]);
+  }, [selectedChat, setMessages, setTypingUsers, setChannels, setUsers]);
 
   const changeViewStat = (channelId, viewState) => {
     WebSocketService.send(`viewstate:${channelId}:${viewState}`);

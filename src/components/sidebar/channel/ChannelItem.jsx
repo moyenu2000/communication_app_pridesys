@@ -11,7 +11,7 @@ const ChannelItem = ({ channel }) => {
 
     changeViewStat(channel.id, 'monitoring');
     channel.offset = 0;
-    console.log("Channel offset:", channel);
+    // console.log("Channel offset:", channel);
     selectChat(channel); 
   };
 

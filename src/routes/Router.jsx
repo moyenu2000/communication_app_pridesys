@@ -20,11 +20,13 @@ import UserProfile from '../pages/UserProfile';
 import Settings from '../pages/Settings';
 import NotFound from '../pages/NotFound';
 import { WebSocketProvider } from '../contexts/WebSocketContext';
+import { InformationProvider } from '../contexts/InformationContext';
 
 function Router() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <InformationProvider>
       <AppStateProvider>
         <ChatStateProvider>
         <WebSocketProvider>
@@ -57,6 +59,7 @@ function Router() {
         </WebSocketProvider>
         </ChatStateProvider>
       </AppStateProvider>
+      </InformationProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -1,37 +1,22 @@
-// src/components/channels/ChannelList.jsx
-import React, { useEffect, useState } from 'react';
-import { fetchChannels } from '../../../services/userServices';  // Import the fetchChannels function
-import ChannelItem from './ChannelItem'; 
 
+// src/components/channels/ChannelList.jsx
+import React, { useState } from 'react';
+import ChannelItem from './ChannelItem';
+import { useInformation } from '../../../contexts/InformationContext';
 
 const ChannelList = () => {
-  const [channels, setChannels] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    
-    const getChannels = async () => {
-      try {
-        const response = await fetchChannels(); 
-        const data = response.data;  
-        console.log(data);
-        
-        setChannels(data.public || []);  
-      } catch (error) {
-        console.error('Error fetching channels:', error);
-      }
-    };
-
-    getChannels();
-  }, []);
+  const { channels, loading } = useInformation();
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredChannels = channels.filter(channel => 
+  const filteredChannels = channels.filter((channel) =>
     channel.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) return <div>Loading channels...</div>;
 
   return (
     <div>
