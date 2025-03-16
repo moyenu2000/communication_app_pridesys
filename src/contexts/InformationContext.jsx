@@ -17,6 +17,7 @@ export const InformationProvider = ({ children }) => {
   const [starredChannels, setStarredChannels] = useState([]);
   const [subscribedChannels, setSubscribedChannels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [allChannels, setAllChannels] = useState([]);
 
   useEffect(() => {
     const getInformation = async () => {
@@ -29,6 +30,7 @@ export const InformationProvider = ({ children }) => {
 
 
         setChannels(channelResponse.data.public || []);
+        setAllChannels(channelResponse.data.all);
         setUsers(userResponse.data);
         setActiveUsers(activeUserResponse.data);
         setStarredChannels(starredChannelsResponse);
@@ -44,7 +46,7 @@ export const InformationProvider = ({ children }) => {
   }, []);
 
   return (
-    <InformationContext.Provider value={{ channels, users, loading, setChannels, setUsers, activeUsers, setActiveUsers ,starredChannels, setStarredChannels, subscribedChannels, setSubscribedChannels }}>
+    <InformationContext.Provider value={{ channels, users, loading, setChannels, setUsers, activeUsers, setActiveUsers ,starredChannels, setStarredChannels, subscribedChannels, setSubscribedChannels ,allChannels, setAllChannels}}>
       {children}
     </InformationContext.Provider>
   );
