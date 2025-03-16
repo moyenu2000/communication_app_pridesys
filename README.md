@@ -15,6 +15,7 @@ npm run dev
 - Text messaging
 - File sharing
 - Mention
+- ogp preview of link
 - Pinning message
 - Unread message
 - Subscribed channel view
