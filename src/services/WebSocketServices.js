@@ -221,6 +221,86 @@ class WebSocketService {
       break;
 
 
+      case "MESSAGE_PINNED":
+        if (!selectedChat) {
+          console.log("No chat selected. Ignoring message.");
+          return;
+        }
+
+        try {
+          const response = await axios.get(`https://traq.duckdns.org/api/v3/messages/${data.body.message_id}/pin`, {
+            withCredentials: true,
+          });
+
+
+          // Update the message content
+          setMessages(prevMessages => {
+            return prevMessages.map(message => {
+              if (message.id === data.body.message_id) {
+                return {
+                  ...message,
+                  pinnedBy: response.data.userId,
+                  pinned: true
+                };
+              }
+              return message;
+            });
+          });
+        } catch (error) {
+          console.error("Error fetching full message:", error);
+        }
+        break;
+
+
+
+      // case "MESSAGE_UNPINNED":
+      //   if (!selectedChat) {
+      //     console.log("No chat selected. Ignoring message.");
+      //     return;
+      //   }
+
+      //   try {
+      //     console.log("Unpinning message with ID:", data.body.message_id);
+      //     setMessages(prevMessages => {
+      //       return prevMessages.map(message => {
+      //         if (message.id === data.body.message_id) {
+      //           const updatedMessage = { ...message };
+      //           updatedMessage.pinned = false;
+      //           delete updatedMessage.pinnedBy; 
+      //           return updatedMessage;
+      //         }
+      //         return message;
+      //       });
+      //     });
+      //   } catch (error) {
+      //     console.error("Error fetching full message:", error);
+      //   }
+      //   break;
+
+
+      case "MESSAGE_UNPINNED":
+  if (!selectedChat) {
+    console.log("No chat selected. Ignoring message.");
+    return;
+  }
+  
+  console.log("Unpinning message with ID:", data.body.message_id);
+  
+  // Update the message state immediately
+  setMessages(prevMessages => {
+    return prevMessages.map(message => {
+      if (message.id === data.body.message_id) {
+        const { pinnedBy, ...updatedMessage } = message;
+        updatedMessage.pinned = false;
+        return updatedMessage;
+      }
+      return message;
+    });
+  });
+  break;
+
+
+
       // USER_ONLINE
       case "USER_ONLINE":
         try {

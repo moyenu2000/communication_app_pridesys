@@ -108,11 +108,38 @@ export const fetchPinnedMessages = async (channelId) => {
     const response = await axios.get(`${API_BASE}/channels/${channelId}/pins`, {
       withCredentials: true,
     });
+    // console.log(response.data);
     return response.data;
   } catch (error) {
     throw new Error('Error fetching pinned messages');
   }
 };
+
+
+export const pinMessage = async (messageId) => {
+  try {
+    const response = await axios.post(`${API_BASE}/messages/${messageId}/pin`, {}, {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error pinning message:', error);
+    throw new Error('Error pinning message');
+  }
+};
+
+export const unpinMessage = async (messageId) => {
+  try {
+    const response = await axios.delete(`${API_BASE}/messages/${messageId}/pin`, {
+      withCredentials: true
+    });
+    return response.status === 204;
+  } catch (error) {
+    console.error('Error unpinning message:', error);
+    throw new Error('Error unpinning message');
+  }
+};
+
 
 
 export const postMessage = async (channelId, content) => {
