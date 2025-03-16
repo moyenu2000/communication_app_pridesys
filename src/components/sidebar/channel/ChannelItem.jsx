@@ -11,13 +11,13 @@ const ChannelItem = ({
   depth = 0
 }) => {
   const { changeViewStat } = useWebSocket();
-  const { selectChat, selectedChat } = useChatState();
+  const { selectChat, selectedChat, setUserOrChannel } = useChatState();
   
   const isSelected = selectedChat && selectedChat.id === channel.id;
   
   const handleClick = () => {
-    // If clicking on the channel name, select the channel
     selectChannel();
+    setUserOrChannel('channel');
   };
   
   const handleHashClick = (e) => {

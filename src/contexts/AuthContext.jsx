@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
         const checkAuth = async () => {
             try {
                 const userData = await fetchCurrentUser();
+                console.log('userData:', userData);
                 setUser(userData);
             } catch (error) {
                 console.error('Auth check failed:', error);

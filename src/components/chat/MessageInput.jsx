@@ -7,7 +7,7 @@ import { postMessage, uploadFile } from '../../services/channelServices';
 const MessageInput = () => {
     const { changeViewStat } = useWebSocket();
     const [inputValue, setInputValue] = useState("");
-    const { selectedChat } = useChatState();
+    const { selectedChat, userOrChannel, selectedUser } = useChatState();
     const { users } = useInformation();
     const [viewState, setViewState] = useState('monitoring');
     const [files, setFiles] = useState([]);
@@ -17,6 +17,15 @@ const MessageInput = () => {
     const [cursorPosition, setCursorPosition] = useState(0);
     const inputRef = useRef(null);
     const fileInputRef = useRef(null);
+
+
+    let channelName = 'Select a channel/User';
+
+    if (userOrChannel === 'channel' && selectedChat) {
+        channelName = selectedChat.name;
+    } else if (userOrChannel === 'user' && selectedUser) {
+        channelName = selectedUser.displayName;
+    }
 
 
     const handleInputChange = (e) => {
@@ -220,7 +229,7 @@ const MessageInput = () => {
         const newValue = inputValue + "@";
         setInputValue(newValue);
         setShowMentionSuggestions(true);
-        
+
         setTimeout(() => {
             if (inputRef.current) {
                 inputRef.current.focus();
@@ -240,20 +249,20 @@ const MessageInput = () => {
             {selectedChat && (
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="px-4 py-2 text-gray-500 text-sm">
-                        Message #{selectedChat.name}
+                        Message #{channelName}
                     </div>
-                    
+
                     <div className="relative px-2 pb-2">
                         <div className="flex items-start">
                             <div className="flex items-center py-2">
-                                <button 
+                                <button
                                     onClick={openFileSelector}
                                     className="w-12 h-12 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center hover:bg-gray-300"
                                 >
                                     <span className="text-2xl">+</span>
                                 </button>
                             </div>
-                            
+
                             <textarea
                                 ref={inputRef}
                                 value={inputValue}
@@ -264,27 +273,27 @@ const MessageInput = () => {
                                 rows="1"
                                 style={{ minHeight: '44px' }}
                             />
-                            
+
                             <div className="flex items-center space-x-2 px-2">
-                                <button 
+                                <button
                                     onClick={handleEmojiClick}
                                     className="w-8 h-8 text-gray-500 hover:text-gray-800 flex items-center justify-center"
                                 >
                                     <span className="text-xl">😊</span>
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleMentionClick}
                                     className="w-8 h-8 text-gray-500 hover:text-gray-800 flex items-center justify-center"
                                 >
                                     <span className="text-xl">@</span>
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleFormatClick}
                                     className="w-8 h-8 text-gray-500 hover:text-gray-800 flex items-center justify-center"
                                 >
                                     <span className="text-xl">Aa</span>
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleSubmit}
                                     disabled={!selectedChat || (!inputValue.trim() && files.length === 0)}
                                     className="w-8 h-8 text-gray-400 hover:text-gray-600 flex items-center justify-center disabled:opacity-50"
@@ -312,7 +321,7 @@ const MessageInput = () => {
                             </div>
                         )}
                     </div>
-                    
+
                     {/* File input (hidden) */}
                     <input
                         type="file"
@@ -321,7 +330,7 @@ const MessageInput = () => {
                         multiple
                         className="hidden"
                     />
-                    
+
                     {/* File preview area */}
                     {files.length > 0 && (
                         <div className="px-4 py-2 bg-gray-50 border-t">
@@ -343,7 +352,7 @@ const MessageInput = () => {
                     )}
                 </div>
             )}
-            
+
             {!selectedChat && (
                 <div className="text-center p-4 text-gray-500">
                     Select a channel to start messaging

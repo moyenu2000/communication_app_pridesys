@@ -12,6 +12,8 @@ export const ChatStateProvider = ({ children }) => {
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [typingUsers, setTypingUsers] = useState([]);
   const [currentChannelViewers, setCurrentChannelViewers] = useState([]);
+  const [userOrChannel, setUserOrChannel] = useState(null);  
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const selectChat = async (chat) => {
     setSelectedChat(chat);
@@ -53,7 +55,7 @@ export const ChatStateProvider = ({ children }) => {
         setHasMoreMessages(false); 
       }
 
-      setMessages((prevMessages) => [...prevMessages, ...updatedMessages]);
+      setMessages((prevMessages) => [...updatedMessages, ...prevMessages]);
 
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -70,7 +72,7 @@ export const ChatStateProvider = ({ children }) => {
   };
 
   return (
-    <ChatStateContext.Provider value={{ selectedChat, selectChat, messages, setMessages, addNewMessage , typingUsers, setTypingUsers, pinnedMessages, setPinnedMessages, currentChannelViewers, setCurrentChannelViewers }}>
+    <ChatStateContext.Provider value={{ selectedChat, selectChat, messages, setMessages, addNewMessage , typingUsers, setTypingUsers, pinnedMessages, setPinnedMessages, currentChannelViewers, setCurrentChannelViewers, loadMessages, hasMoreMessages, loading , userOrChannel, setUserOrChannel , selectedUser, setSelectedUser }}>
       {children}
     </ChatStateContext.Provider>
   );
