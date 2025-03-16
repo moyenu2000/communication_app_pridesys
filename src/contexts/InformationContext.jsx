@@ -1,6 +1,6 @@
 // src/context/InformationContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchActiveUsers, fetchChannels, fetchUsers } from '../services/userServices';
+import { fetchActiveUsers, fetchChannels, fetchUsers, getUnReadMessages } from '../services/userServices';
 import { getStarredChannels, getSubscribedChannels } from '../services/channelServices';
 
 
@@ -17,7 +17,8 @@ export const InformationProvider = ({ children }) => {
   const [starredChannels, setStarredChannels] = useState([]);
   const [subscribedChannels, setSubscribedChannels] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [allChannels, setAllChannels] = useState([]);
+  const [dmChannels, setDmChannels] = useState([]);
+  const [unReadMessages, setUnReadMessages] = useState([]);
 
   useEffect(() => {
     const getInformation = async () => {
@@ -27,14 +28,18 @@ export const InformationProvider = ({ children }) => {
         const activeUserResponse = await fetchActiveUsers();
         const starredChannelsResponse = await getStarredChannels();
         const subscribedChannelsResponse = await getSubscribedChannels();
+        const unReadMessagesResponse = await getUnReadMessages();
 
 
         setChannels(channelResponse.data.public || []);
-        setAllChannels(channelResponse.data.all);
+        setDmChannels(channelResponse.data.dm || []);
         setUsers(userResponse.data);
         setActiveUsers(activeUserResponse.data);
         setStarredChannels(starredChannelsResponse);
         setSubscribedChannels(subscribedChannelsResponse);
+        setUnReadMessages(unReadMessagesResponse.data);
+        console.log('Unread messages:', unReadMessagesResponse.data);
+        console.log("All channels:", channelResponse.data);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -46,7 +51,7 @@ export const InformationProvider = ({ children }) => {
   }, []);
 
   return (
-    <InformationContext.Provider value={{ channels, users, loading, setChannels, setUsers, activeUsers, setActiveUsers ,starredChannels, setStarredChannels, subscribedChannels, setSubscribedChannels ,allChannels, setAllChannels}}>
+    <InformationContext.Provider value={{ channels, users, loading, setChannels, setUsers, activeUsers, setActiveUsers ,starredChannels, setStarredChannels, subscribedChannels, setSubscribedChannels, unReadMessages, setUnReadMessages ,dmChannels, setDmChannels }}>
       {children}
     </InformationContext.Provider>
   );

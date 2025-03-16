@@ -37,11 +37,24 @@ class WebSocketService {
   }
 
 
-  async handleMessage(data, setMessages, selectedChat, setTypingUsers, setChannels, setUsers, setActiveUsers, setCurrentChannelViewers) {
+  async handleMessage(data, setMessages, selectedChat, setTypingUsers, setChannels, setUsers, setActiveUsers, setCurrentChannelViewers, setUnReadMessages) {
     switch (data.type) {
       case "MESSAGE_CREATED":
         // console.log("New message:", data.body);
         // console.log("Selected chat:", selectedChat);
+
+        try {
+          const response = await axios.get(`https://traq.duckdns.org/api/v3/users/me/unread`, {
+            withCredentials: true,
+          });
+
+          const unReadMessages = response.data;
+          console.log("Unread messages:", unReadMessages);
+          setUnReadMessages(unReadMessages);
+        } catch (error) {
+          console.error("Error fetching unread messages:", error);
+        }
+
 
         if (!selectedChat) {
           console.log("No chat selected. Ignoring message.");
@@ -73,6 +86,19 @@ class WebSocketService {
         } catch (error) {
           console.error("Error fetching full message:", error);
         }
+
+
+        // set unReadMessages
+
+        // try
+        // Get
+        // export const getUnReadMessages = () => {
+
+        //   return axiosInstance.get('/users/me/unread');
+        // }
+
+
+
         break;
 
 
@@ -121,7 +147,7 @@ class WebSocketService {
         }
         break;
 
-        // USER_JOINED
+      // USER_JOINED
       case "USER_JOINED":
         try {
           const response = await axios.get(`https://traq.duckdns.org/api/v3/users/${data.body.id}`, {
@@ -138,87 +164,87 @@ class WebSocketService {
         break;
 
 
-        // MESSAGE_STAMPED
-        // MESSAGE_UPDATED
-        // MESSAGE_DELETED
+      // MESSAGE_STAMPED
+      // MESSAGE_UPDATED
+      // MESSAGE_DELETED
 
-       // MESSAGE_STAMPED
-    case "MESSAGE_STAMPED":
-      if (!selectedChat) {
-        console.log("No chat selected. Ignoring message.");
-        return;
-      }
-
-      try {
-        const response = await axios.get(`https://traq.duckdns.org/api/v3/messages/${data.body.id}`, {
-          withCredentials: true,
-        });
-
-        const fullMessage = response.data;
-
-        if (fullMessage.channelId !== selectedChat.id) {
+      // MESSAGE_STAMPED
+      case "MESSAGE_STAMPED":
+        if (!selectedChat) {
+          console.log("No chat selected. Ignoring message.");
           return;
         }
 
-        // Update the message stamps
-        setMessages(prevMessages => {
-          return prevMessages.map(message => {
-            if (message.id === fullMessage.id) {
-              message.stamps = fullMessage.stamps; // Update the stamps
-            }
-            return message;
+        try {
+          const response = await axios.get(`https://traq.duckdns.org/api/v3/messages/${data.body.id}`, {
+            withCredentials: true,
           });
-        });
-      } catch (error) {
-        console.error("Error fetching full message:", error);
-      }
-      break;
 
-    // MESSAGE_UPDATED
-    case "MESSAGE_UPDATED":
-      if (!selectedChat) {
-        console.log("No chat selected. Ignoring message.");
-        return;
-      }
+          const fullMessage = response.data;
 
-      try {
-        const response = await axios.get(`https://traq.duckdns.org/api/v3/messages/${data.body.id}`, {
-          withCredentials: true,
-        });
+          if (fullMessage.channelId !== selectedChat.id) {
+            return;
+          }
 
-        const fullMessage = response.data;
+          // Update the message stamps
+          setMessages(prevMessages => {
+            return prevMessages.map(message => {
+              if (message.id === fullMessage.id) {
+                message.stamps = fullMessage.stamps; // Update the stamps
+              }
+              return message;
+            });
+          });
+        } catch (error) {
+          console.error("Error fetching full message:", error);
+        }
+        break;
 
-        if (fullMessage.channelId !== selectedChat.id) {
+      // MESSAGE_UPDATED
+      case "MESSAGE_UPDATED":
+        if (!selectedChat) {
+          console.log("No chat selected. Ignoring message.");
           return;
         }
 
-        // Update the message content
-        setMessages(prevMessages => {
-          return prevMessages.map(message => {
-            if (message.id === fullMessage.id) {
-              return fullMessage; // Replace the old message with the updated one
-            }
-            return message;
+        try {
+          const response = await axios.get(`https://traq.duckdns.org/api/v3/messages/${data.body.id}`, {
+            withCredentials: true,
           });
+
+          const fullMessage = response.data;
+
+          if (fullMessage.channelId !== selectedChat.id) {
+            return;
+          }
+
+          // Update the message content
+          setMessages(prevMessages => {
+            return prevMessages.map(message => {
+              if (message.id === fullMessage.id) {
+                return fullMessage; // Replace the old message with the updated one
+              }
+              return message;
+            });
+          });
+        } catch (error) {
+          console.error("Error fetching full message:", error);
+        }
+        break;
+
+      // MESSAGE_DELETED
+      case "MESSAGE_DELETED":
+        if (!selectedChat) {
+          console.log("No chat selected. Ignoring message.");
+          return;
+        }
+
+        // Remove the deleted message from the message list
+        setMessages(prevMessages => {
+          return prevMessages.filter(message => message.id !== data.body.id); // Remove message by ID
         });
-      } catch (error) {
-        console.error("Error fetching full message:", error);
-      }
-      break;
-
-    // MESSAGE_DELETED
-    case "MESSAGE_DELETED":
-      if (!selectedChat) {
-        console.log("No chat selected. Ignoring message.");
-        return;
-      }
-
-      // Remove the deleted message from the message list
-      setMessages(prevMessages => {
-        return prevMessages.filter(message => message.id !== data.body.id); // Remove message by ID
-      });
-      console.log(`Message with ID ${data.body.id} was deleted.`);
-      break;
+        console.log(`Message with ID ${data.body.id} was deleted.`);
+        break;
 
 
       case "MESSAGE_PINNED":
@@ -279,25 +305,25 @@ class WebSocketService {
 
 
       case "MESSAGE_UNPINNED":
-  if (!selectedChat) {
-    console.log("No chat selected. Ignoring message.");
-    return;
-  }
-  
-  console.log("Unpinning message with ID:", data.body.message_id);
-  
-  // Update the message state immediately
-  setMessages(prevMessages => {
-    return prevMessages.map(message => {
-      if (message.id === data.body.message_id) {
-        const { pinnedBy, ...updatedMessage } = message;
-        updatedMessage.pinned = false;
-        return updatedMessage;
-      }
-      return message;
-    });
-  });
-  break;
+        if (!selectedChat) {
+          console.log("No chat selected. Ignoring message.");
+          return;
+        }
+
+        console.log("Unpinning message with ID:", data.body.message_id);
+
+        // Update the message state immediately
+        setMessages(prevMessages => {
+          return prevMessages.map(message => {
+            if (message.id === data.body.message_id) {
+              const { pinnedBy, ...updatedMessage } = message;
+              updatedMessage.pinned = false;
+              return updatedMessage;
+            }
+            return message;
+          });
+        });
+        break;
 
 
 
@@ -308,7 +334,7 @@ class WebSocketService {
             withCredentials: true,
           });
           const onlineUser = response.data;
-          
+
           setActiveUsers(prevActiveUsers => {
             // Check if the user is already in the active users list
             const userExists = prevActiveUsers.some(user => user.id === onlineUser.id);
@@ -329,7 +355,7 @@ class WebSocketService {
           return prevActiveUsers.filter(user => user.id !== data.body.id);
         });
         break;
-      
+
 
 
 

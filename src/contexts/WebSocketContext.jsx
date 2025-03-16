@@ -13,7 +13,7 @@ export const useWebSocket = () => {
 
 export const WebSocketProvider = ({ children }) => {
   const { setMessages, selectedChat , setTypingUsers, setCurrentChannelViewers} = useChatState();
-  const {setChannels, setUsers, setActiveUsers} = useInformation();
+  const {setChannels, setUsers, setActiveUsers, setUnReadMessages} = useInformation();
   const [connected, setConnected] = useState(false);
   
   // Set up the connection once
@@ -38,7 +38,7 @@ export const WebSocketProvider = ({ children }) => {
       console.log("Message received:", data);
       console.log(selectedChat);
       
-      WebSocketService.handleMessage(data, setMessages, selectedChat, setTypingUsers, setChannels, setUsers, setActiveUsers, setCurrentChannelViewers);
+      WebSocketService.handleMessage(data, setMessages, selectedChat, setTypingUsers, setChannels, setUsers, setActiveUsers, setCurrentChannelViewers, setUnReadMessages);
     };
     
     WebSocketService.socket.addEventListener('message', messageHandler);

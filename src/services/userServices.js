@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
 
 // Fetch Channel List
 export const fetchChannels = () => {
-  return axiosInstance.get('/channels');
+  return axiosInstance.get('/channels?include-dm=true');
 };
 
 
@@ -48,4 +48,19 @@ export const fetchChannel = (channelId) => {
 export const fetchUser = (userId) => {
   return axiosInstance.get(`/users/${userId}`);
 };
+
+// GET
+// /users/me/unread
+// Get
+export const getUnReadMessages = () => {
+
+  return axiosInstance.get('/users/me/unread');
+}
+
+
+
+export const markChannelAsRead = (channelId) => {
+  return axiosInstance.delete(`/users/me/unread/${channelId}`);
+}
+
 

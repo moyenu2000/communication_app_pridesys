@@ -193,10 +193,6 @@ export const fetchFileMetadata = async (fileId)=> {
 }
 
 
-// static getFileDownloadUrl(fileId) {
-//   return `${API_BASE}/files/${fileId}?dl=1`;
-// }
-
 export const getFileDownloadUrl = (fileId) => {
   return `${API_BASE}/files/${fileId}?dl=1`;
 }

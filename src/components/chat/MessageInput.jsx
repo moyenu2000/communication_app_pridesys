@@ -305,8 +305,10 @@ const MessageInput = () => {
 
                         {/* Mention suggestions dropdown */}
                         {showMentionSuggestions && filteredUsers.length > 0 && (
-                            <div className="absolute bottom-full left-12 bg-white border rounded shadow-lg max-h-48 overflow-y-auto w-64 mb-1 z-10">
-                                {filteredUsers.map((user) => (
+                            
+                            <div className="absolute bottom-full left-12 bg-white border rounded shadow-lg max-h-48 overflow-y-auto w-64 mb-1 z-50">
+
+                            {filteredUsers.map((user) => (
                                     <div
                                         key={user.id}
                                         className="p-2 hover:bg-gray-100 cursor-pointer flex items-center"
